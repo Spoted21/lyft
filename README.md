@@ -27,7 +27,7 @@ Amount received from Lyft in US Dollars
 ### Tip 
 Amount tipped by rider in US Dollars
 
-##3 Cancel 
+### Cancel 
 Dichotomous indicator 'Yes' or 'No' for cancelled rides
 
 ### LyftLine 
