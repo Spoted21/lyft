@@ -3,41 +3,41 @@ Dataset from Lyft driving in Colorado
 
 # Data Dictionary 
 
-##RideNumber 
+## RideNumber 
 Increasing integar denoting ride number
 
-##Date 
+## Date 
 Date of the start of the ride
 
-##Time 
+## Time 
 Time of the start of the ride
 
-##Distance 
+## Distance 
 Distance driven in miles during ride, does not include drive miles driven to pickup passenger
 
-##Time_Min 
+## Time_Min 
 Ride duration in whole minutes
 
-##Time_Sec 
+## Time_Sec 
 Ride duration in whole seconds
 
-##Amount 
+## Amount 
 Amount received from Lyft in US Dollars
 
-##Tip 
+## Tip 
 Amount tipped by rider in US Dollars
 
-##Cancel 
+## Cancel 
 Dichotomous indicator 'Yes' or 'No' for cancelled rides
 
-##LyftLine 
+## LyftLine 
 Dichotomous indicator 'Yes' or 'No' for shared rides (Lyft Line)
 
-##HoursLoggedIn 
+## HoursLoggedIn 
 Hours spent in driver mode
 
-##MinutesLoggedIn 
+## MinutesLoggedIn 
 Minutes spent in driver mode
 
-##SecondsLoggedIn
+## SecondsLoggedIn
 Seconds spent in driver mode
