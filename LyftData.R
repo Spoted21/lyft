@@ -1,80 +1,111 @@
-# Read in Data
-# foo <- read.csv(file = "http://www.beardedanalytics.com/todd/lyft.csv")
-foo <- read.csv(file="https://raw.githubusercontent.com/Spoted21/lyft/master/lyft2.csv")
+# Load libraries ----
+library(lubridate) 
+library(sqldf)
 
-head(foo)
-# Get Time into reasonable format
-foo$StartTime <- as.POSIXct(
-  paste(strptime(foo$Date,format = "%m/%d/%Y"),
-        format(strptime(foo$Time, "%I:%M %p"), format="%H:%M:%S")
+# Read in Data ---
+lyft <- read.csv(file="https://raw.githubusercontent.com/Spoted21/lyft/master/lyft2.csv")
+
+# Examine Data ----
+head(lyft)
+dim(lyft)
+str(lyft)
+
+
+# Calculate StartTime and EndTime ----
+lyft$StartTime <- as.POSIXct(
+  paste(
+    strptime(lyft$Date,format = "%m/%d/%Y"),
+    format(strptime(lyft$Time, "%I:%M %p"), format="%H:%M:%S")
   ),format="%Y-%m-%d %H:%M:%OS")
 
-library(lubridate)
-foo$EndTime <-foo$StartTime+(foo$Time_Min*60+foo$Time_Sec)
-foo$duration <- difftime(foo$EndTime,foo$StartTime,units = "min")
-foo$duration <- difftime(foo$EndTime,foo$StartTime,units = "hour")
+lyft$EndTime <-lyft$StartTime+(lyft$Time_Min*60+lyft$Time_Sec)
 
-
-# Need to calculate driving session
+################################################################################
+# Calculate a driving session ----
 # If more than 4 hours since last ride a new session 
 # is assumed to have started
-foo$timeBetweenRides <-""
-# foo$rideSession <-as.numeric(as.na())
-str(foo)
-head(foo)
-# Get this working
-for(i in 1:nrow(foo) ){
-  print(i)
+################################################################################
+
+
+lyft$rideSession <- 0
+
+for(i in 1:nrow(lyft) ){
   #First Row - no comparison
-  if(i==1) {foo$rideSession[1] <- 1 } else if(i== nrow(foo) ){ #Last Row
-    foo$rideSession[i] <- foo$rideSession[i-1] }  else {
-      timedifference <- as.numeric(difftime(foo[i+1,]$StartTime, foo[i,]$EndTime,units = "mins"))
-      if(timedifference <= (60*4) ) { foo$rideSession[i] <-foo$rideSession[i-1] } else {
-        foo$rideSession[i] <- max(foo$rideSession)+1 }
+  if(i==1) {lyft$rideSession[1] <- 1 } else if(i== nrow(lyft) ){ #Last Row
+    lyft$rideSession[i] <- lyft$rideSession[i-1] }  else {
+      timedifference <- as.numeric(difftime( lyft[i+1,]$StartTime, lyft[i,]$EndTime,units = "mins"))
+      if(timedifference <= (60*4) ) { lyft$rideSession[i] <-lyft$rideSession[i-1] } else {
+        lyft$rideSession[i] <- max(lyft$rideSession)+1 }
     }
 }
 
-foo$TotalMoney <- foo$Amount + foo$Tip
-#Last Row - same Ride session as previous record
-#Everything Else
+lyft$TotalMoney <- lyft$Amount + lyft$Tip
+lyft$starthour <- hour(lyft$StartTime)
+# Night time driving 5pm to 3AM
+night <- lyft[lyft$starthour %in% c(17:23,(0:3)) , ]
 
-#Distribution of Money Made by Ride Session
-with(foo, boxplot(TotalMoney ~ rideSession ,
-          col=c("lightblue","wheat","red"),
-          las=1,main="Distribution of Money Made\n by Ride Session") )
-
-# Check a flat one
-foo[foo$rideSession==10,]
-
-
-#Figure out the money made per hour of day
-# use starting hour
-
-foo$starthour <- hour(foo$StartTime)
-#Distribution of Money Made by start hour
-with(foo, boxplot(TotalMoney ~ starthour ,
-                  col=c("lightblue","wheat","red"),
-                  las=1,main="Distribution of Money Made\n by Start Hour") )
-
-
-
+# Used for formatting the plot
+HourLabels <- data.frame(hour = 0L:23L, label =
+                           c(paste0(c(12,1:11),"AM") ,
+                             paste0(c(12,1:11),"PM"))
+)
 # Calculate the time while waiting for rides as well 
 # as giving rides at the week level
 
-# Assuming no collisions, take the time drive as unique and 
-#then find the min and max dates for each amount of time 
-foo$HoursOnClock <-foo$HoursLoggedIn+(foo$MinutesLoggedIn/60)+(foo$SecondsLoggedIn/60/60)
+# Assuming no collisions, take the time driven as unique and 
+# then find the min and max dates for each amount of time 
+lyft$HoursOnClock <-lyft$HoursLoggedIn+(lyft$MinutesLoggedIn/60)+(lyft$SecondsLoggedIn/60/60)
 
-hoursSpentDriving <- round(sum(unique(foo$HoursOnClock ),na.rm = T),2)
-moneyEarnedDriving <- round(sum(foo$Amount+foo$Tip),2)
+sqldf(" Select distinct 
+      HoursOnClock,
+      rideSession
+      From 
+      lyft
+      Order By 
+      rideSession
+      ")
+
+hoursSpentDriving <- round(sum(unique(lyft$HoursOnClock ),na.rm = T),2)
+moneyEarnedDriving <- round(sum(lyft$Amount+lyft$Tip),2)
 moneyPerHour <- round(moneyEarnedDriving/hoursSpentDriving,2)
-#Print Summary
-paste0("Total time Spent = ",hoursSpentDriving," hours")
-paste0("Total Money Earned before Expenses = $",moneyEarnedDriving)
-paste0("Earnings Per Hour Before Expenses = $",moneyPerHour)
-paste0("Earnings Per Ride Before Expenses = $",round(moneyEarnedDriving/max(foo$RideNumber),2))
 
-HourLabels <- cbind(hour = 0:23, label =
-                      c(paste0(c(12,1:11),"AM") ,
-                        paste0(c(12,1:11),"PM"))
-)
+
+#Distribution of Money Made by Ride hour
+byHour <- sqldf("Select starthour
+                From lyft
+                group BY starthour
+                Having Count(rideSession)> 5 
+                ")
+
+
+sqldf("Select Count(*),starthour
+      From lyft
+      group BY starthour
+      order by starthour
+      ")
+#Distribution of Money Made by start hour ----
+plotData <- night
+myLabels <- HourLabels[HourLabels$hour %in% unique(plotData$starthour),]$label 
+myColors <- c("lightblue","wheat","lightgreen","gray")
+with(
+  plotData,
+  boxplot(
+    TotalMoney ~ starthour ,
+    col= myColors,
+    las=1,
+    main="Distribution of Money Made\n by Start Hour",
+    names=myLabels
+  )
+)#End With Statement
+
+# for the tidyverse fans
+library(tidyverse)
+plotData$plotColor <- myColors
+p <- ggplot(plotData , aes( factor(starthour),TotalMoney ),
+            fill= plotColor) +
+  geom_boxplot() +
+  scale_x_discrete(labels=myLabels) 
+  # scale_fill_manual(name="foo",values=c("red","blue") ) 
+p
+# library(plotly)
+# ggplotly(p)
