@@ -3,7 +3,11 @@ library(lubridate)
 library(sqldf)
 
 # Read in Data ---
-lyft <- read.csv(file="https://raw.githubusercontent.com/Spoted21/lyft/master/lyft2.csv")
+# lyft <- read.csv(file="https://raw.githubusercontent.com/Spoted21/lyft/master/lyft2.csv")
+lyft <- read.csv( 
+  file="/home/spoted21/Documents/R/lyft/lyft2.csv",
+  stringsAsFactors = FALSE
+  )
 
 # Examine Data ----
 head(lyft)
@@ -56,14 +60,14 @@ HourLabels <- data.frame(hour = 0L:23L, label =
 # then find the min and max dates for each amount of time 
 lyft$HoursOnClock <-lyft$HoursLoggedIn+(lyft$MinutesLoggedIn/60)+(lyft$SecondsLoggedIn/60/60)
 
-sqldf(" Select distinct 
-      HoursOnClock,
-      rideSession
-      From 
-      lyft
-      Order By 
-      rideSession
-      ")
+# sqldf(" Select distinct 
+#       HoursOnClock,
+#       rideSession
+#       From 
+#       lyft
+#       Order By 
+#       rideSession
+#       ")
 
 hoursSpentDriving <- round(sum(unique(lyft$HoursOnClock ),na.rm = T),2)
 moneyEarnedDriving <- round(sum(lyft$Amount+lyft$Tip),2)
@@ -87,16 +91,30 @@ sqldf("Select Count(*),starthour
 plotData <- night
 myLabels <- HourLabels[HourLabels$hour %in% unique(plotData$starthour),]$label 
 myColors <- c("lightblue","wheat","lightgreen","gray")
+totalrides <- nrow(night)
 with(
   plotData,
   boxplot(
     TotalMoney ~ starthour ,
     col= myColors,
     las=1,
-    main="Distribution of Money Made\n by Start Hour",
-    names=myLabels
+    main=paste0("Distribution of Money Made by Start Hour\n",
+                "(n = ",totalrides,")") ,
+    names=myLabels,
+    yaxt="n"
   )
 )#End With Statement
+# Add formatted axis 
+axis(side=2,
+     at = axTicks(2),
+     labels =paste0("$ ",axTicks(2)),
+     las=1)
+mtext(text = paste0("Based upon ",totalrides," rides"),
+      side =1,
+      outer =FALSE ,
+      line = 3,
+      cex=1.25
+      )
 
 # for the tidyverse fans
 library(tidyverse)
