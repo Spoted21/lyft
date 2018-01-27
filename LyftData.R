@@ -109,12 +109,13 @@ axis(side=2,
      at = axTicks(2),
      labels =paste0("$ ",axTicks(2)),
      las=1)
-mtext(text = paste0("Based upon ",totalrides," rides"),
-      side =1,
-      outer =FALSE ,
-      line = 3,
-      cex=1.25
-      )
+
+# mtext(text = paste0("Based upon ",totalrides," rides"),
+#       side =1,
+#       outer =FALSE ,
+#       line = 3,
+#       cex=1.25
+#       )
 
 # for the tidyverse fans
 library(tidyverse)
