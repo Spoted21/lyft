@@ -4,7 +4,7 @@ Dataset from Lyft driving in Colorado
 # Data Dictionary 
 
 ### RideNumber 
-Increasing integar denoting ride number
+Increasing integer denoting ride number
 
 ### Date 
 Date of the start of the ride
