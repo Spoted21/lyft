@@ -171,3 +171,21 @@ axis(side=2,
      at = axTicks(2),
      labels =paste0("$ ",axTicks(2)),
      las=1)
+
+
+# build simple model to estimate earnings given day of week and start hour
+
+# Question
+# If I drive at 5pm on a Friday, what would I expect to make?
+
+# Start with a linear model
+simpleModel <- lm(TotalMoney ~ factor(day) + factor(starthour) ,data=lyft)
+
+simpleModel
+summary(simpleModel)
+
+lyft[lyft$day=="Friday" & lyft$starthour==17,]
+getStats <- function(day,starthour) {
+  
+  
+}
