@@ -128,3 +128,46 @@ p <- ggplot(plotData , aes( factor(starthour),TotalMoney ),
 p
 # library(plotly)
 # ggplotly(p)
+
+# Looking at Data by Day 
+lyft$day <- weekdays(lyft$StartTime)
+
+dayData <- sqldf("Select 
+                  count(*) Rides ,
+                  sum(TotalMoney) as TotalMoney ,
+                  starthour,
+                 day ,
+              case 
+                   when day='Monday'   then 1 
+                   when day='Tuesday'  then 2 
+                   when day='Wednesday'  then 3
+                   when day='Thursday'  then 4
+                   when day='Friday'  then 5
+                   when day='Saturday'  then 6
+                   when day='Sunday'  then 7
+              end as DayOrder
+                 From 
+                    lyft 
+                 group by 
+                  day ,
+                  starthour
+                 order by DayOrder") 
+
+totalrides2 <- sum(dayData$Rides)
+with(
+  dayData,
+  boxplot(
+    TotalMoney ~ day ,
+    col= myColors,
+    las=1,
+    main=paste0("Distribution of Money Made by day \n",
+                "(n = ",totalrides2,")") ,
+    # names=myLabels,
+    yaxt="n"
+  )
+)
+# Add formatted axis 
+axis(side=2,
+     at = axTicks(2),
+     labels =paste0("$ ",axTicks(2)),
+     las=1)
