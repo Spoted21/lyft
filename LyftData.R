@@ -1,6 +1,7 @@
 # Load libraries ----
 library(lubridate) 
 library(sqldf)
+library(skimr)
 
 # Read in Data ---
 # lyft <- read.csv(file="https://raw.githubusercontent.com/Spoted21/lyft/master/lyft2.csv")
@@ -14,6 +15,8 @@ head(lyft)
 dim(lyft)
 str(lyft)
 
+# My new favorite function
+skim(lyft)
 
 # Calculate StartTime and EndTime ----
 lyft$StartTime <- as.POSIXct(
@@ -23,13 +26,14 @@ lyft$StartTime <- as.POSIXct(
   ),format="%Y-%m-%d %H:%M:%OS")
 
 lyft$EndTime <-lyft$StartTime+(lyft$Time_Min*60+lyft$Time_Sec)
+lyft$TotalMoney <- lyft$Amount + lyft$Tip
+lyft$starthour <- hour(lyft$StartTime)
 
 ################################################################################
 # Calculate a driving session ----
 # If more than 4 hours since last ride a new session 
 # is assumed to have started
 ################################################################################
-
 
 lyft$rideSession <- 0
 for(i in 1:nrow(lyft) ){
@@ -42,8 +46,7 @@ for(i in 1:nrow(lyft) ){
     }
 }
 
-lyft$TotalMoney <- lyft$Amount + lyft$Tip
-lyft$starthour <- hour(lyft$StartTime)
+
 
 # Night time driving 5pm to 3AM
 night <- lyft[lyft$starthour %in% c(17:23,(0:3)) , ]
@@ -53,28 +56,6 @@ HourLabels <- data.frame(hour = 0L:23L, label =
                            c(paste0(c(12,1:11),"AM") ,
                              paste0(c(12,1:11),"PM"))
 )
-
-# Calculate the time while waiting for rides as well 
-# as giving rides at the week level
-
-# Assuming no collisions, take the time driven as unique and 
-# then find the min and max dates for each amount of time 
-lyft$HoursOnClock <-lyft$HoursLoggedIn+(lyft$MinutesLoggedIn/60)+
-  (lyft$SecondsLoggedIn/60/60)
-
-
-hoursSpentDriving <- round(sum(unique(lyft$HoursOnClock ),na.rm = T),2)
-moneyEarnedDriving <- round(sum(lyft$Amount+lyft$Tip),2)
-moneyPerHour <- round(moneyEarnedDriving/hoursSpentDriving,2)
-
-
-#Distribution of Money Made by Ride hour
-byHour <- sqldf("Select starthour
-                From lyft
-                group BY starthour
-                Having Count(rideSession)> 5 
-                ")
-
 
 #Distribution of Money Made by start hour ----
 plotData <- night
