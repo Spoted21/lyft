@@ -4,11 +4,7 @@ library(sqldf)
 library(skimr)
 
 # Read in Data ---
-# lyft <- read.csv(file="https://raw.githubusercontent.com/Spoted21/lyft/master/lyft2.csv")
-lyft <- read.csv(
-  file="/home/spoted21/Documents/R/lyft/lyft2.csv",
-  stringsAsFactors = FALSE
-  )
+lyft <- read.csv(file="https://raw.githubusercontent.com/Spoted21/lyft/master/lyft2.csv")
 
 # Examine Data ----
 head(lyft)
