@@ -1,4 +1,4 @@
-# lyft
+# Lyft
 Dataset from Lyft driving in Colorado
 
 # Analysis 
