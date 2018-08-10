@@ -1,6 +1,9 @@
 # lyft
 Dataset from Lyft driving in Colorado
 
+# Analysis 
+[Part 1] (http://www.beardedanalytics.com/analyzing-lyft-data-part-i/)
+
 # Data Dictionary 
 
 ### RideNumber 
