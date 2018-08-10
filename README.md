@@ -45,7 +45,6 @@ Minutes spent in driver mode
 ### SecondsLoggedIn
 Seconds spent in driver mode
 
-# R Code 
 ### Get Started 
 
 ![](MoneyByHour.png)
